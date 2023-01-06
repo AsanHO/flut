@@ -1,143 +1,88 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
+import 'package:flutterdemo/models/webtoonModel.dart';
+import 'package:flutterdemo/services/apiService.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  int totalSec = 1500;
-  int totalCount = 0;
-  bool isRunning = false;
-  late Timer timer;
-
-  void onTick(Timer timer) {
-    if (totalSec == 0) {
-      setState(() {
-        isRunning = !isRunning;
-        totalCount = totalCount + 1;
-        totalSec = 10;
-      });
-      timer.cancel();
-    } else {
-      setState(() {
-        totalSec = totalSec - 1;
-      });
-    }
-  }
-
-  void onClick() {
-    timer = Timer.periodic(const Duration(seconds: 1), onTick);
-    setState(() {
-      isRunning = !isRunning;
-    });
-  }
-
-  void onPause() {
-    timer.cancel();
-    setState(() {
-      isRunning = !isRunning;
-    });
-  }
-
-  String format(int sec) {
-    var duration =
-        Duration(seconds: sec).toString().split(".")[0].substring(2, 7);
-    return duration;
-  }
-
-  void onReset() {
-    onPause();
-    setState(() {
-      totalSec = 1500;
-    });
-  }
-
+class HomeScreen extends StatelessWidget {
+  // const HomeScreen({super.key}); 는 더이상 고정값이 아니므로 삭제
+  final Future<List<WebtoonModel>> webtoons = ApiService.getTodaysToons();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).backgroundColor,
-      body: Column(
-        children: [
-          Flexible(
-            flex: 1,
-            child: Container(
-              alignment: Alignment.bottomCenter,
-              child: Text(
-                format(totalSec),
-                style: TextStyle(
-                    color: Theme.of(context).cardColor,
-                    fontSize: 80,
-                    fontWeight: FontWeight.w600),
-              ),
-            ),
+      appBar: AppBar(
+        elevation: 3,
+        foregroundColor: Colors.green[300],
+        backgroundColor: Colors.white,
+        title: const Text(
+          "오늘의 웹툰",
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
           ),
-          Flexible(
-            flex: 3,
-            child: Center(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IconButton(
-                    iconSize: 150,
-                    color: Theme.of(context).cardColor,
-                    onPressed: isRunning ? onPause : onClick,
-                    icon: Icon(isRunning
-                        ? Icons.pause_circle_outline_outlined
-                        : Icons.play_circle_outlined),
-                  ),
-                  IconButton(
-                    iconSize: 150,
-                    color: Theme.of(context).cardColor,
-                    onPressed: onReset,
-                    icon: const Icon(Icons.refresh_outlined),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Flexible(
-            flex: 1,
-            child: Row(
+        ),
+      ),
+      body: FutureBuilder(
+        future: webtoons,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return Column(
               children: [
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).cardColor,
-                      borderRadius: BorderRadius.circular(50),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "pomodoro",
-                          style: TextStyle(
-                            fontSize: 20,
-                            color: Theme.of(context).textTheme.headline1!.color,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Text(
-                          "$totalCount",
-                          style: TextStyle(
-                            fontSize: 60,
-                            color: Theme.of(context).textTheme.headline1!.color,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                const SizedBox(
+                  height: 50,
                 ),
+                Expanded(child: makeList(snapshot))
+                //리스트뷰의 크기를 정하지 않으면 무한대가 됨, 때문에 Expanded위젯 사용
               ],
-            ),
-          )
-        ],
+            );
+          }
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        },
       ),
     );
   }
+}
+
+ListView makeList(AsyncSnapshot<List<WebtoonModel>> snapshot) {
+  return ListView.separated(
+    scrollDirection: Axis.horizontal,
+    itemCount: snapshot.data!.length,
+    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+    //리스트뷰에 넣는 패딩
+    itemBuilder: (context, index) {
+      var webtoon = snapshot.data![index];
+      return Column(
+        children: [
+          Container(
+            width: 250,
+            clipBehavior: Clip.hardEdge,
+            //위 코드가 있어야 보더를 넣을 수 있음
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(15),
+              boxShadow: [
+                BoxShadow(
+                  blurRadius: 15,
+                  offset: const Offset(10, 10),
+                  color: Colors.black.withOpacity(0.3),
+                )
+              ],
+            ),
+            child: Image.network(webtoon.thumb),
+          ),
+          const SizedBox(
+            height: 10,
+          ),
+          Text(
+            webtoon.title,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      );
+    },
+    separatorBuilder: (context, index) => const SizedBox(width: 40),
+    //요소들의 사이에 넣는 마진
+  );
 }

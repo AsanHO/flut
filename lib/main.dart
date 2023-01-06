@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutterdemo/screens/homeScreen.dart';
 
 void main() {
-  runApp(App());
+  runApp(const App());
 }
 
 class App extends StatelessWidget {
+  const App({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -16,7 +18,7 @@ class App extends StatelessWidget {
         ),
         cardColor: const Color(0xFFECE7DC),
       ),
-      home: const Scaffold(
+      home: Scaffold(
         body: HomeScreen(),
       ),
     );
