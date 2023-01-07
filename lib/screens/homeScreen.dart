@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutterdemo/models/webtoonModel.dart';
 import 'package:flutterdemo/services/apiService.dart';
+import 'package:flutterdemo/widgets/webtoonWidget.dart';
 
 class HomeScreen extends StatelessWidget {
   // const HomeScreen({super.key}); 는 더이상 고정값이 아니므로 삭제
@@ -45,44 +46,19 @@ class HomeScreen extends StatelessWidget {
 
 ListView makeList(AsyncSnapshot<List<WebtoonModel>> snapshot) {
   return ListView.separated(
-    scrollDirection: Axis.horizontal,
-    itemCount: snapshot.data!.length,
-    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-    //리스트뷰에 넣는 패딩
-    itemBuilder: (context, index) {
-      var webtoon = snapshot.data![index];
-      return Column(
-        children: [
-          Container(
-            width: 250,
-            clipBehavior: Clip.hardEdge,
-            //위 코드가 있어야 보더를 넣을 수 있음
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(15),
-              boxShadow: [
-                BoxShadow(
-                  blurRadius: 15,
-                  offset: const Offset(10, 10),
-                  color: Colors.black.withOpacity(0.3),
-                )
-              ],
-            ),
-            child: Image.network(webtoon.thumb),
-          ),
-          const SizedBox(
-            height: 10,
-          ),
-          Text(
-            webtoon.title,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
+      scrollDirection: Axis.horizontal,
+      itemCount: snapshot.data!.length,
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+      //리스트뷰에 넣는 패딩
+      itemBuilder: (context, index) {
+        var webtoon = snapshot.data![index];
+        return Webtoon(
+          title: webtoon.title,
+          thumb: webtoon.thumb,
+          id: webtoon.id,
+        );
+      },
+      separatorBuilder: (context, index) => const SizedBox(width: 40)
+      //요소들의 사이에 넣는 마진
       );
-    },
-    separatorBuilder: (context, index) => const SizedBox(width: 40),
-    //요소들의 사이에 넣는 마진
-  );
 }
